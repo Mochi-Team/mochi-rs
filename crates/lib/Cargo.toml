@@ -1,0 +1,9 @@
+[package]
+name = "mochi"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mochi-macros = { path = "../macros" }
+mochi-tools = { path = "../tools" }
+mochi-convert = { path = "../convert" }

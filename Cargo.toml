@@ -1,0 +1,7 @@
+[workspace]
+members = ["crates/*"]
+
+[profile.release]
+opt-level = "s"
+strip = true
+lto = true
