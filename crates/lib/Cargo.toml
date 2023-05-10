@@ -5,5 +5,4 @@ edition = "2021"
 
 [dependencies]
 mochi-macros = { path = "../macros" }
-mochi-tools = { path = "../tools" }
-mochi-convert = { path = "../convert" }
+mochi-imports = { path = "../imports" }

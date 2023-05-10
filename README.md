@@ -1,4 +1,4 @@
 # mochi bindings for rust
 
-## Acknowledgmenets
-- [@Skittyblock]() for creating [Aidoku-rs](), which this library heavily is inspired of.
+## acknowledgmenets
+- [@Skittyblock]() for creating [Aidoku-rs](), which created the swift-wasm bindings for rust.
