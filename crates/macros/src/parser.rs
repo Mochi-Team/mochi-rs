@@ -22,11 +22,11 @@ impl<'a> MacroParse<&'a mut TokenStream> for syn::Item {
         match self {
             syn::Item::Impl(i) => {
                 let functions_used: Result<Vec<TokenStream>> = i.items
-                .iter()
-                .map(|o| {
-                    parse_impl_item(o)
-                })
-                .collect();
+                    .iter()
+                    .map(|o| {
+                        parse_impl_item(o)
+                    })
+                    .collect();
 
                 let type_name = &i.self_ty;
 

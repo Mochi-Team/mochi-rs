@@ -28,18 +28,6 @@ extern "C" {
         required: bool
     ) -> i32;
 
-    fn create_media(
-        id_ptr: i32,
-        id_len: i32,
-        title_ptr: i32,
-        title_len: i32,
-        poster_image_ptr: i32,
-        poser_image_len: i32,
-        banner_image_ptr: i32,
-        banner_image_len: i32,
-        meta: MediaMeta
-    ) -> i32;
-
     // Create Paging
     fn create_paging(
         items_array_ref_ptr: i32,
@@ -55,29 +43,125 @@ extern "C" {
         lising_type: i32,
         paging_ptr: i32
     ) -> i32;
+
+    fn create_playlist(
+        id_ptr: i32,
+        id_len: i32,
+        title_ptr: i32,
+        title_len: i32,
+        poster_image_ptr: i32,
+        poster_image_len: i32,
+        banner_image_ptr: i32,
+        banner_image_len: i32,
+        playlist_type: PlaylistType
+    ) -> i32;
+
+    fn create_playlist_details(
+        description_ptr: i32,
+        description_len: i32,
+        alternative_titles_ptr: i32,
+        alternative_posters_ptr: i32,
+        alternative_banners_ptr: i32,
+        genres_ptr: i32,
+        year_released: i32,
+        ratings: i32,
+        previews_ptr: i32
+    ) -> i32;
+
+    fn create_playlist_preview(
+        title_ptr: i32,
+        title_len: i32,
+        description_ptr: i32,
+        description_len: i32,
+        thumbnail_ptr: i32,
+        thumbnail_len: i32,
+        link_ptr: i32,
+        link_len: i32,
+        preview_type: PlaylistPreviewType
+    ) -> i32;
+
+    fn create_playlist_item(
+        id_ptr: i32,
+        id_len: i32,
+        title_ptr: i32,
+        title_len: i32,
+        description_ptr: i32,
+        description_len: i32,
+        thumbnail_ptr: i32,
+        thumbnail_len: i32,
+        section_ptr: i32,
+        section_len: i32,
+        group: f64,
+        number: f64,
+        timestamp_ptr: i32,
+        timestamp_len: i32,
+        tags_ptr: i32
+    ) -> i32;
 }
 
 pub trait Meta {
     fn search_filters() -> SearchFilters;
-    fn search(search_query: SearchQuery) -> Result<Paging<Media>>;
+    fn search(search_query: SearchQuery) -> Result<Paging<Playlist>>;
     fn discovery_listing() -> Result<DiscoverListings>;
+    fn playlist_details(id: String) -> Result<PlaylistDetails>;
 }
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
-pub enum MediaMeta {
+pub enum PlaylistType {
     Video,
     Image,
     Text
 }
 
 #[derive(Debug, Clone)]
-pub struct Media {
+pub struct Playlist {
     pub id: String,
     pub title: Option<String>,
     pub poster_image: Option<String>,
     pub banner_image: Option<String>,
-    pub meta: MediaMeta
+    pub playlist_type: PlaylistType
+}
+
+#[derive(Debug, Clone)]
+pub struct PlaylistDetails {
+    pub description: Option<String>,
+    pub alternative_titles: Vec<String>,
+    pub alternative_posters: Vec<String>,
+    pub alternative_banners: Vec<String>,
+    pub genres: Vec<String>,
+    pub year_released: Option<i32>,
+    pub ratings: Option<i32>,
+    pub previews: Vec<PlaylistPreview>
+}
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct PlaylistPreview {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub thumbnail: String,
+    pub link: String,
+    pub preview_type: PlaylistPreviewType
+}
+
+#[repr(C)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+pub enum PlaylistPreviewType {
+    Video,
+    Image
+}
+
+pub struct PlaylistItem {
+    pub id: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub thumbnail: Option<String>,
+    pub section: Option<String>,
+    pub group: Option<f64>,
+    pub number: f64,
+    pub timestamp: Option<String>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -98,7 +182,7 @@ pub enum DiscoverListingType {
 pub struct DiscoverListing {
     pub title: String,
     pub listing_type: DiscoverListingType,
-    pub paging: Paging<Media>
+    pub paging: Paging<Playlist>
 }
 
 pub struct DiscoverListings(pub Vec<DiscoverListing>);
@@ -130,6 +214,8 @@ pub struct SearchFilterOption {
     pub option_id: String,
     pub display_name: String
 }
+
+
 
 impl From<SearchFilters> for PtrRef {
     fn from(value: SearchFilters) -> PtrRef {
@@ -233,29 +319,6 @@ impl Into<SearchQuery> for PtrRef {
     }
 }
 
-impl From<Media> for PtrRef {
-    fn from(value: Media) -> Self {
-        let id = value.id;
-        let title = optional_str_ptr(value.title);
-        let poster_image = optional_str_ptr(value.poster_image);
-        let banner_image = optional_str_ptr(value.banner_image);
-        let host_ptr = unsafe {
-            create_media(
-                id.as_ptr() as i32, 
-                id.len() as i32,
-                title.0,
-                title.1,
-                poster_image.0,
-                poster_image.1,
-                banner_image.0,
-                banner_image.1,
-                value.meta
-            )
-        };
-        Self::new(host_ptr)
-    }
-}
-
 impl<T> From<Paging<T>> for PtrRef where PtrRef: From<T> {
     fn from(value: Paging<T>) -> Self {
         let mut items_array_ref = ArrayRef::new();
@@ -315,5 +378,147 @@ impl From<DiscoverListings> for PtrRef {
         let array_ref_ptr = array_ref.ptr();
         core::mem::forget(array_ref);
         Self::new(array_ref_ptr)
+    }
+}
+
+impl From<Playlist> for PtrRef {
+    fn from(value: Playlist) -> Self {
+        let id = value.id;
+        let title = optional_str_ptr(value.title);
+        let poster_image = optional_str_ptr(value.poster_image);
+        let banner_image = optional_str_ptr(value.banner_image);
+        let host_ptr = unsafe {
+            create_playlist(
+                id.as_ptr() as i32, 
+                id.len() as i32,
+                title.0,
+                title.1,
+                poster_image.0,
+                poster_image.1,
+                banner_image.0,
+                banner_image.1,
+                value.playlist_type
+            )
+        };
+        Self::new(host_ptr)
+    }
+}
+
+impl From<PlaylistDetails> for PtrRef {
+    fn from(value: PlaylistDetails) -> Self {
+        let description = optional_str_ptr(value.description);
+
+        let mut alternative_titles = ArrayRef::new();
+        for title in value.alternative_titles {
+            alternative_titles.insert(title.into());
+        }
+        let alternative_titles_ptr = alternative_titles.ptr();
+        core::mem::forget(alternative_titles);
+
+        let mut alternative_posters = ArrayRef::new();
+        for poster in value.alternative_posters {
+            alternative_posters.insert(poster.into());
+        }
+        let alternative_posters_ptr = alternative_posters.ptr();
+        core::mem::forget(alternative_posters);
+
+        let mut alternative_banners = ArrayRef::new();
+        for banner in value.alternative_banners {
+            alternative_banners.insert(banner.into());
+        }
+        let alternative_banners_ptr = alternative_banners.ptr();
+        core::mem::forget(alternative_banners);
+
+        let mut genres = ArrayRef::new();
+        for genre in value.genres {
+            genres.insert(genre.into());
+        }
+        let genres_ptr = genres.ptr();
+        core::mem::forget(genres);
+
+        let mut previews = ArrayRef::new();
+        for preview in value.previews {
+            previews.insert(preview.into());
+        }
+        let previews_ptr = previews.ptr();
+        core::mem::forget(previews);
+
+        let host_ptr = unsafe {
+            create_playlist_details(
+                description.0, 
+                description.1, 
+                alternative_titles_ptr, 
+                alternative_posters_ptr,
+                alternative_banners_ptr, 
+                genres_ptr, 
+                value.year_released.unwrap_or(-1), 
+                value.ratings.unwrap_or(-1), 
+                previews_ptr
+            )
+        };
+
+        Self::new(host_ptr)
+    }
+}
+
+impl From<PlaylistPreview> for PtrRef {
+    fn from(value: PlaylistPreview) -> Self {
+        let title = optional_str_ptr(value.title);
+        let description = optional_str_ptr(value.description);
+
+        let host_ptr = unsafe {
+            create_playlist_preview(
+                title.0, 
+                title.1, 
+                description.0, 
+                description.1, 
+                value.thumbnail.as_ptr() as i32, 
+                value.thumbnail.len() as i32,
+                value.link.as_ptr() as i32,
+                value.link.len() as i32, 
+                value.preview_type
+            )
+        };
+        PtrRef::from(host_ptr)
+    }
+}
+
+impl From<PlaylistItem> for PtrRef {
+    fn from(value: PlaylistItem) -> Self {
+        let title = optional_str_ptr(value.title);
+        let description = optional_str_ptr(value.description);
+        let thumbnail = optional_str_ptr(value.thumbnail);
+        let section = optional_str_ptr(value.section);
+        let timestamp = optional_str_ptr(value.timestamp);
+
+        let mut tags = ArrayRef::new();
+
+        for tag in value.tags {
+            tags.insert(tag.into());
+        }
+
+        let tags_ptr = tags.ptr();
+        core::mem::forget(tags);
+
+        let host_ptr = unsafe {
+            create_playlist_item(
+                value.id.as_ptr() as i32,
+                value.id.len() as i32,
+                title.0,
+                title.1,
+                description.0,
+                description.1,
+                thumbnail.0,
+                thumbnail.1,
+                section.0,
+                section.1,
+                value.group.unwrap_or(-1.0),
+                value.number, 
+                timestamp.0, 
+                timestamp.1, 
+                tags_ptr
+            )
+        };
+        Self::from(host_ptr)
     }
 }

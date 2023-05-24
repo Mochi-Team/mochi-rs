@@ -264,6 +264,12 @@ impl<T> From<Result<T>> for PtrRef where PtrRef: From<T> {
     }
 }
 
+impl Into<String> for PtrRef {
+    fn into(self) -> String {
+        self.as_string().unwrap_or_default()
+    }
+}
+
 /// A key-value object, typically shown as a dictionary
 /// 
 /// 
