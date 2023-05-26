@@ -1,3 +1,5 @@
+use core::num::ParseIntError;
+
 pub type Result<T> = core::result::Result<T, MochiError>;
 
 #[repr(C)]
@@ -18,6 +20,12 @@ impl From<PtrCastError> for MochiError {
 impl From<NodeError> for MochiError {
     fn from(scraping: NodeError) -> Self {
         Self::Node(scraping)
+    }
+}
+
+impl From<ParseIntError> for MochiError {
+    fn from(value: ParseIntError) -> Self {
+        Self::Unimplemented
     }
 }
 

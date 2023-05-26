@@ -89,20 +89,35 @@ extern "C" {
         description_len: i32,
         thumbnail_ptr: i32,
         thumbnail_len: i32,
-        section_ptr: i32,
-        section_len: i32,
-        group: f64,
         number: f64,
         timestamp_ptr: i32,
         timestamp_len: i32,
         tags_ptr: i32
+    ) -> i32;
+
+    fn create_playlist_items_response(
+        content_ptr: i32,
+        all_groups_ptr: i32
+    ) -> i32;
+
+    fn create_playlist_group(
+        id: f64,
+        display_title_ptr: i32,
+        display_title_len: i32
+    ) -> i32;
+
+    fn create_playlist_group_items(
+        group_id: f64,
+        previous_group_id: f64,
+        next_group_id: f64,
+        items_ptr: i32
     ) -> i32;
 }
 
 pub trait Meta {
     fn search_filters() -> SearchFilters;
     fn search(search_query: SearchQuery) -> Result<Paging<Playlist>>;
-    fn discovery_listing() -> Result<DiscoverListings>;
+    fn discover_listings() -> Result<DiscoverListings>;
     fn playlist_details(id: String) -> Result<PlaylistDetails>;
 }
 
@@ -114,9 +129,11 @@ pub enum PlaylistType {
     Text
 }
 
+pub type PlaylistID = String;
+
 #[derive(Debug, Clone)]
 pub struct Playlist {
-    pub id: String,
+    pub id: PlaylistID,
     pub title: Option<String>,
     pub poster_image: Option<String>,
     pub banner_image: Option<String>,
@@ -135,7 +152,6 @@ pub struct PlaylistDetails {
     pub previews: Vec<PlaylistPreview>
 }
 
-#[repr(C)]
 #[derive(Debug, Clone)]
 pub struct PlaylistPreview {
     pub title: Option<String>,
@@ -152,16 +168,44 @@ pub enum PlaylistPreviewType {
     Image
 }
 
+pub type PlaylistItemID = String;
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct PlaylistItem {
-    pub id: String,
+    pub id: PlaylistItemID,
     pub title: Option<String>,
     pub description: Option<String>,
     pub thumbnail: Option<String>,
-    pub section: Option<String>,
-    pub group: Option<f64>,
     pub number: f64,
     pub timestamp: Option<String>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PlaylistItemsRequest {
+    pub playlist_id: PlaylistID,
+    pub playlist_item_number: Option<f64>,
+    pub playlist_item_group: Option<f64>
+}
+
+#[derive(Debug, Clone)]
+pub struct PlaylistItemsResponse {
+    pub content: PlaylistGroupContent,
+    pub all_groups: Vec<PlaylistGroup>
+}
+
+#[derive(Debug, Clone)]
+pub struct PlaylistGroup {
+    pub id: f64,
+    pub display_title: Option<String>
+}
+
+#[derive(Debug, Clone)]
+pub struct PlaylistGroupContent {
+    pub group_id: f64,
+    pub previous_group_id: Option<f64>,
+    pub next_group_id: Option<f64>,
+    pub items: Vec<PlaylistItem>
 }
 
 #[derive(Debug, Clone)]
@@ -179,29 +223,35 @@ pub enum DiscoverListingType {
     Featured
 }
 
+#[derive(Debug, Clone)]
 pub struct DiscoverListing {
     pub title: String,
     pub listing_type: DiscoverListingType,
     pub paging: Paging<Playlist>
 }
 
+#[derive(Debug, Clone)]
 pub struct DiscoverListings(pub Vec<DiscoverListing>);
 
+#[derive(Debug, Clone)]
 pub struct SearchQuery {
     pub query: String,
     pub filters: Vec<SearchQueryFilter>,
     pub page: Option<String>
 }
 
+#[derive(Debug, Clone)]
 pub struct SearchQueryFilter {
     pub filter_id: String,
     pub option_id: String
 }
 
+#[derive(Debug, Clone)]
 pub struct SearchFilters {
     pub filters: Vec<SearchFilter>
 }
 
+#[derive(Debug, Clone)]
 pub struct SearchFilter {
     pub filter_id: String,
     pub display_name: String,
@@ -210,12 +260,11 @@ pub struct SearchFilter {
     pub required: bool
 }
 
+#[derive(Debug, Clone)]
 pub struct SearchFilterOption {
     pub option_id: String,
     pub display_name: String
 }
-
-
 
 impl From<SearchFilters> for PtrRef {
     fn from(value: SearchFilters) -> PtrRef {
@@ -488,7 +537,6 @@ impl From<PlaylistItem> for PtrRef {
         let title = optional_str_ptr(value.title);
         let description = optional_str_ptr(value.description);
         let thumbnail = optional_str_ptr(value.thumbnail);
-        let section = optional_str_ptr(value.section);
         let timestamp = optional_str_ptr(value.timestamp);
 
         let mut tags = ArrayRef::new();
@@ -510,9 +558,6 @@ impl From<PlaylistItem> for PtrRef {
                 description.1,
                 thumbnail.0,
                 thumbnail.1,
-                section.0,
-                section.1,
-                value.group.unwrap_or(-1.0),
                 value.number, 
                 timestamp.0, 
                 timestamp.1, 
@@ -520,5 +565,89 @@ impl From<PlaylistItem> for PtrRef {
             )
         };
         Self::from(host_ptr)
+    }
+}
+
+impl Into<PlaylistItemsRequest> for PtrRef {
+    fn into(self) -> PlaylistItemsRequest {
+        if let Ok(reference) = self.as_object() {
+            let playlist_id = reference.get("playlistId")
+                .as_string()
+                .unwrap_or_default();
+
+            let playlist_item_number = reference.get("playlistItemNumber")
+                .as_float()
+                .ok();
+
+            let playlist_item_group = reference.get("playlistItemGroup")
+                .as_float()
+                .ok();
+
+            PlaylistItemsRequest {
+                playlist_id,
+                playlist_item_number,
+                playlist_item_group
+            }
+        } else {
+            PlaylistItemsRequest { 
+                playlist_id: "".to_string(), 
+                playlist_item_number: None, 
+                playlist_item_group: None
+            }    
+        }
+    }
+}
+
+impl From<PlaylistItemsResponse> for PtrRef {
+    fn from(value: PlaylistItemsResponse) -> Self {
+        let content: PtrRef = value.content.into();
+        let content_ptr = content.pointer();
+        core::mem::forget(content_ptr);
+
+        let mut all_groups = ArrayRef::new();
+        for group in value.all_groups {
+            all_groups.insert(group.into())
+        }
+        let all_groups_ptr = all_groups.ptr();
+        core::mem::forget(all_groups);
+
+        Self::new(unsafe { create_playlist_items_response(content_ptr, all_groups_ptr) } )
+    }
+}
+
+impl From<PlaylistGroup> for PtrRef {
+    fn from(value: PlaylistGroup) -> Self {
+        let display_title = optional_str_ptr(value.display_title);
+        Self::new(
+            unsafe {
+                create_playlist_group(
+                    value.id, 
+                    display_title.0,
+                    display_title.1
+                )
+            }
+        )
+    }
+}
+
+impl From<PlaylistGroupContent> for PtrRef {
+    fn from(value: PlaylistGroupContent) -> Self {
+        let mut items = ArrayRef::new();
+        for item in value.items {
+            items.insert(item.into())
+        }
+        let items_ptr = items.ptr();
+        core::mem::forget(items);
+
+        Self::new(
+            unsafe {
+                create_playlist_group_items(
+                    value.group_id, 
+                    value.previous_group_id.unwrap_or(-1.0), 
+                    value.next_group_id.unwrap_or(-1.0), 
+                    items_ptr
+                )
+            }
+        )
     }
 }
