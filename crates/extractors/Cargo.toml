@@ -1,0 +1,8 @@
+[package]
+name = "mochi-extractors"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+mochi-imports = { path = "../imports" }
+mochi-structs = { path = "../structs" }

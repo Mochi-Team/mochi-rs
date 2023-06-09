@@ -8,7 +8,8 @@ pub enum MochiError {
     PtrCast(PtrCastError),
     Node(NodeError),
     JsonParseError,
-    Unimplemented
+    Unimplemented,
+    Unknown
 }
 
 impl From<PtrCastError> for MochiError {

@@ -6,3 +6,8 @@ edition = "2021"
 [dependencies]
 mochi-macros = { path = "../macros" }
 mochi-imports = { path = "../imports" }
+mochi-extractors = { path = "../extractors" }
+mochi-structs = { path = "../structs" }
+
+[features]
+extractors = []
