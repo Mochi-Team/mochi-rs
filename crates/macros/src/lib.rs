@@ -1,16 +1,19 @@
-mod parser;
-extern crate proc_macro2;
-extern crate quote;
-extern crate syn;
+#![no_std]
 
-use proc_macro::TokenStream;
+#[macro_export]
+macro_rules! format {
+    ($($arg:tt)*) => {{
+        mochi_imports::core::format(core::format_args!($($arg)*))
+    }};
+}
 
-#[proc_macro_attribute]
-pub fn mochi_bind(attr: TokenStream, input: TokenStream) -> TokenStream {
-    match parser::expand(attr.into(), input.into()) {
-        Ok(tokens) => tokens.into(),
-        Err(error) => {
-            error.to_compile_error().into()
-        }
-    }
+#[macro_export]
+macro_rules! println {
+    () => {{
+        mochi_imports::core::print("");
+    }};
+    ($($arg:tt)*) => {{
+        let string = mochi_imports::core::format(core::format_args!($($arg)*));
+        mochi_imports::core::print(&(string));
+    }};
 }

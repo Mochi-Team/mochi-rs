@@ -5,6 +5,7 @@ pub mod structs {
 }
 pub use mochi_macros::*;
 pub use mochi_imports::*;
+pub use mochi_proc_macros::*;
 
 #[cfg(feature = "extractors")]
 pub mod extractors {

@@ -25,7 +25,7 @@ impl From<NodeError> for MochiError {
 }
 
 impl From<ParseIntError> for MochiError {
-    fn from(value: ParseIntError) -> Self {
+    fn from(_: ParseIntError) -> Self {
         Self::Unimplemented
     }
 }

@@ -45,11 +45,19 @@ impl GogoCDN {
             .attr("data-value");
         let script_bytes = Crypto::base64_parse(&script_base64_string);
 
-        let decrypted_params_bytes = Crypto::aes_decrypt(&script_bytes, &keys.key, &keys.iv);
+        let decrypted_params_bytes = Crypto::aes_decrypt(
+            &script_bytes, 
+            keys.key.as_bytes(), 
+            keys.iv.as_bytes()
+        );
         let decrypted_params = String::from_utf8(decrypted_params_bytes)
             .unwrap_or_default();
 
-        let encrypted_id_bytes = Crypto::aes_encrypt(id_bytes, &keys.key, &keys.iv);
+        let encrypted_id_bytes = Crypto::aes_encrypt(
+            id_bytes, 
+            keys.key.as_bytes(), 
+            keys.iv.as_bytes()
+        );
         let encrypted_id = Crypto::base64_string(&encrypted_id_bytes);
         let encrypt_ajax_url = format!("{}//{}/encrypt-ajax.php?id={}&alias={}", video_url_protocol, video_url_hostname, encrypted_id, decrypted_params);
 
@@ -69,7 +77,12 @@ impl GogoCDN {
             .replace("\\", "");
         let encrypted_data_bytes = Crypto::base64_parse(&encryped_data_encoded_cleaned);
 
-        let decrypted_data_bytes = Crypto::aes_decrypt(&encrypted_data_bytes, &keys.second_key, &keys.iv);
+        let decrypted_data_bytes = Crypto::aes_decrypt(
+            &encrypted_data_bytes, 
+            keys.second_key.as_bytes(), 
+            keys.iv.as_bytes()
+        );
+
         let decrypted_data_json = mochi_imports::json::parse(decrypted_data_bytes)
             .and_then(|o| o.as_object())?;
 
@@ -83,7 +96,8 @@ impl GogoCDN {
                     links.push(
                         PlaylistEpisodeServerLink { 
                             url: link, 
-                            quality: mochi_structs::video::PlaylistEpisodeServerQualityType::Auto
+                            quality: mochi_structs::video::PlaylistEpisodeServerQualityType::Auto,
+                            format_type: mochi_structs::video::PlaylistEpisodeServerFormatType::HLS
                         }
                     );
                 }
@@ -98,7 +112,8 @@ impl GogoCDN {
                     links.push(
                         PlaylistEpisodeServerLink { 
                             url: link, 
-                            quality: mochi_structs::video::PlaylistEpisodeServerQualityType::Auto
+                            quality: mochi_structs::video::PlaylistEpisodeServerQualityType::Auto,
+                            format_type: mochi_structs::video::PlaylistEpisodeServerFormatType::HLS
                         }
                     );
                 }
@@ -108,8 +123,7 @@ impl GogoCDN {
         Ok(
             PlaylistEpisodeServerResponse { 
                 links, 
-                subtitles: vec![], 
-                format_type: PlaylistEpisodeServerFormatType::HLS 
+                subtitles: vec![]
             }
         )
     }

@@ -29,21 +29,22 @@ extern "C" {
 
     fn create_episode_server_response(
         links_ptr: i32,
-        subtitles_ptr: i32,
-        format_type: i32
+        subtitles_ptr: i32
     ) -> i32;
 
     fn create_episode_server_link(
         url_ptr: i32,
         url_len: i32,
-        quality: i32
+        quality: i32,
+        format: i32
     ) -> i32;
 
     fn create_episode_server_subtitle(
         url_ptr: i32,
         url_len: i32,
         language_ptr: i32,
-        language_len: i32
+        language_len: i32,
+        format: i32
     ) -> i32;
 }
 
@@ -83,7 +84,6 @@ pub struct PlaylistEpisodeServerRequest {
 pub struct PlaylistEpisodeServerResponse {
     pub links: Vec<PlaylistEpisodeServerLink>,
     pub subtitles: Vec<PlaylistEpisodeServerSubtitle>,
-    pub format_type: PlaylistEpisodeServerFormatType,
     // TODO: Add skip times and move format types to links
     // pub skip_times: Vec<SkipTime>
 }
@@ -98,7 +98,7 @@ pub enum PlaylistEpisodeServerFormatType {
 pub struct PlaylistEpisodeServerLink {
     pub url: String,
     pub quality: PlaylistEpisodeServerQualityType,
-    // pub format_type: PlaylistEpisodeServerFormatType,
+    pub format_type: PlaylistEpisodeServerFormatType,
 }
 
 #[repr(u32)]
@@ -126,7 +126,15 @@ impl Into<i32> for PlaylistEpisodeServerQualityType {
 
 pub struct PlaylistEpisodeServerSubtitle {
     pub url: String,
-    pub language: String
+    pub language: String,
+    pub format: PlaylistEpisodeServerSubtitleFormat
+}
+
+#[repr(C)]
+pub enum PlaylistEpisodeServerSubtitleFormat {
+    VTT,
+    ASS,
+    SRT
 }
 
 // Into + From Implementations
@@ -249,8 +257,7 @@ impl From<PlaylistEpisodeServerResponse> for PtrRef {
         let response_ptr = unsafe {
             create_episode_server_response(
                 links_ptr, 
-                subtitles_ptr, 
-                value.format_type as i32
+                subtitles_ptr
             )
         };
         PtrRef::new(response_ptr)
@@ -263,7 +270,8 @@ impl From<PlaylistEpisodeServerLink> for PtrRef {
             create_episode_server_link(
                 value.url.as_ptr() as i32, 
                 value.url.len() as i32,
-                value.quality.into()
+                value.quality.into(),
+                value.format_type as i32
             )
         };
         PtrRef::new(ptr)
@@ -277,7 +285,8 @@ impl From<PlaylistEpisodeServerSubtitle> for PtrRef {
                 value.url.as_ptr() as i32,
                 value.url.len() as i32,
                 value.language.as_ptr() as i32,
-                value.language.len() as i32
+                value.language.len() as i32,
+                value.format as i32
             )
         };
         PtrRef::new(ptr)

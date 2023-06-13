@@ -43,6 +43,17 @@ extern "C" {
     fn array_remove(ptr: HostPtr, idx: i32);
 }
 
+/// Prints a message to the Aidoku logs.
+pub fn print<T: AsRef<str>>(string: T) {
+    let string = string.as_ref();
+    extern "C" {
+        fn print(string: *const u8, size: usize);
+    }
+    unsafe {
+        print(string.as_ptr(), string.len());
+    }
+}
+
 #[repr(C)]
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Kind {

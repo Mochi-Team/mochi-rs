@@ -8,6 +8,7 @@ mochi-macros = { path = "../macros" }
 mochi-imports = { path = "../imports" }
 mochi-extractors = { path = "../extractors" }
 mochi-structs = { path = "../structs" }
+mochi-proc-macros = { path = "../proc_macros" }
 
 [features]
 extractors = []

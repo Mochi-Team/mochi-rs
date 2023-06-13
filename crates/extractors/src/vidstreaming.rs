@@ -1,10 +1,7 @@
-use mochi_imports::http::{HTTPRequest, HTTPMethod};
-
 pub struct VidStreaming {}
 
 impl VidStreaming {
-    pub fn extract<T: AsRef<str>>(video_url: T) {
-        let value = video_url.as_ref();
-        let html = HTTPRequest::new("", HTTPMethod::Get);
+    pub fn extract(_video_url: &str) -> mochi_imports::error::Result<mochi_structs::video::PlaylistEpisodeServerResponse> {
+        Err(mochi_imports::error::MochiError::Unimplemented)
     }
 }
