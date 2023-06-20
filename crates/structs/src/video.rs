@@ -1,7 +1,7 @@
 extern crate alloc;
 
 use alloc::{vec::Vec, string::{String, ToString}};
-use mochi_imports::{error::Result, core::{PtrRef, ArrayRef}};
+use mochi_imports::{error::Result, core::{PtrRef, ArrayRef, ObjectRef}};
 use super::conversion::optional_str_ptr;
 
 use super::meta::{PlaylistItemsRequest, PlaylistItemsResponse};
@@ -29,7 +29,9 @@ extern "C" {
 
     fn create_episode_server_response(
         links_ptr: i32,
-        subtitles_ptr: i32
+        subtitles_ptr: i32,
+        skip_times_ptr: i32,
+        headers_ptr: i32
     ) -> i32;
 
     fn create_episode_server_link(
@@ -42,9 +44,17 @@ extern "C" {
     fn create_episode_server_subtitle(
         url_ptr: i32,
         url_len: i32,
-        language_ptr: i32,
-        language_len: i32,
-        format: i32
+        name_ptr: i32,
+        name_len: i32,
+        format: i32,
+        default: bool,
+        autoselect: bool
+    ) -> i32;
+
+    fn create_episode_server_skip_time(
+        start_time: f32,
+        end_time: f32,
+        skip_type: PlaylistEpisodeServerSkipType
     ) -> i32;
 }
 
@@ -84,8 +94,8 @@ pub struct PlaylistEpisodeServerRequest {
 pub struct PlaylistEpisodeServerResponse {
     pub links: Vec<PlaylistEpisodeServerLink>,
     pub subtitles: Vec<PlaylistEpisodeServerSubtitle>,
-    // TODO: Add skip times and move format types to links
-    // pub skip_times: Vec<SkipTime>
+    pub skip_times: Vec<PlaylistEpisodeServerSkipTime>,
+    pub headers: Vec<PlaylistEpisodeServerHeader>
 }
 
 #[repr(C)]
@@ -126,15 +136,42 @@ impl Into<i32> for PlaylistEpisodeServerQualityType {
 
 pub struct PlaylistEpisodeServerSubtitle {
     pub url: String,
-    pub language: String,
-    pub format: PlaylistEpisodeServerSubtitleFormat
+    pub name: String,
+    pub format: PlaylistEpisodeServerSubtitleFormat,
+    pub default: bool,
+    pub autoselect: bool,
 }
 
 #[repr(C)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub enum PlaylistEpisodeServerSubtitleFormat {
     VTT,
     ASS,
     SRT
+}
+
+pub struct PlaylistEpisodeServerSkipTime {
+    /// Start time in seconds
+    pub start_time: f32,
+
+    /// End time in seconds
+    pub end_time: f32,
+
+    /// Skip type
+    pub skip_type: PlaylistEpisodeServerSkipType
+}
+
+#[repr(C)]
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
+pub enum PlaylistEpisodeServerSkipType {
+    OPENING,
+    ENDING,
+    RECAP
+}
+
+pub struct PlaylistEpisodeServerHeader {
+    pub key: String,
+    pub value: String
 }
 
 // Into + From Implementations
@@ -238,6 +275,20 @@ impl From<PlaylistEpisodeServer> for PtrRef {
     }
 }
 
+impl From<PlaylistEpisodeServerSkipTime> for PtrRef {
+    fn from(value: PlaylistEpisodeServerSkipTime) -> Self {
+        PtrRef::new(
+            unsafe { 
+                create_episode_server_skip_time(
+                    value.start_time, 
+                    value.end_time, 
+                    value.skip_type
+                ) 
+            }
+        )
+    }
+}
+
 impl From<PlaylistEpisodeServerResponse> for PtrRef {
     fn from(value: PlaylistEpisodeServerResponse) -> Self {
         let mut links = ArrayRef::new();
@@ -254,10 +305,26 @@ impl From<PlaylistEpisodeServerResponse> for PtrRef {
         let subtitles_ptr = subtitles.ptr();
         core::mem::forget(subtitles);
 
+        let mut skip_times = ArrayRef::new();
+        for skip_time in value.skip_times {
+            skip_times.insert(skip_time.into());
+        }
+        let skip_times_ptr = skip_times.ptr();
+        core::mem::forget(skip_times);
+
+        let mut headers = ObjectRef::new();
+        for header in value.headers {
+            headers.set(&header.key, header.value.into())
+        }
+        let headers_ptr = headers.ptr();
+        core::mem::forget(headers);
+
         let response_ptr = unsafe {
             create_episode_server_response(
                 links_ptr, 
-                subtitles_ptr
+                subtitles_ptr,
+                skip_times_ptr,
+                headers_ptr
             )
         };
         PtrRef::new(response_ptr)
@@ -284,9 +351,11 @@ impl From<PlaylistEpisodeServerSubtitle> for PtrRef {
             create_episode_server_subtitle(
                 value.url.as_ptr() as i32,
                 value.url.len() as i32,
-                value.language.as_ptr() as i32,
-                value.language.len() as i32,
-                value.format as i32
+                value.name.as_ptr() as i32,
+                value.name.len() as i32,
+                value.format as i32,
+                value.default,
+                value.autoselect
             )
         };
         PtrRef::new(ptr)

@@ -10,6 +10,7 @@ use mochi_imports::http::HTTPMethod;
 use mochi_imports::http::HTTPRequest;
 use mochi_structs::video::PlaylistEpisodeServerLink;
 use mochi_structs::video::PlaylistEpisodeServerResponse;
+use mochi_structs::video::PlaylistEpisodeServerSkipTime;
 use mochi_structs::video::PlaylistEpisodeServerSubtitle;
 
 static FALLBACK_KEY: &'static str = "c1d17096f2ca11b7";
@@ -24,7 +25,7 @@ impl RapidCloud {
             .split("/")
             .last()
             .and_then(|v| v.split("?").nth(0))
-            .expect("Id could not be found for rapidcloud link.");
+            .expect("ID could not be found for rapidcloud link.");
 
         let url = format!("{}/ajax/embed-6/getSources?id={}", HOST, id);
 
@@ -96,35 +97,67 @@ impl RapidCloud {
         }
 
         let mut subtitles: Vec<PlaylistEpisodeServerSubtitle> = vec![];
-
-        if let Ok(tracks_elements) = json.get("tracks").as_array() {
-            for element in tracks_elements {
-                let track = element.as_object()?;
-                let file = track.get("file").as_string()?;
-                let label = track.get("label").as_string()?;
-                let kind = track.get("kind").as_string();
-                if let Ok(kind) = kind {
-                    if kind.contains("captions") {
-                        subtitles.push(
-                            PlaylistEpisodeServerSubtitle { 
-                                url: file, 
-                                language: label, 
-                                format: mochi_structs::video::PlaylistEpisodeServerSubtitleFormat::SRT
-                            }
-                        )
+        let tracks = json.get("tracks").as_array().unwrap_or_default();
+        for element in tracks {
+            let track = element.as_object()?;
+            let file = track.get("file")
+                .as_string()?;
+            let label = track.get("label")
+                .as_string()
+                .unwrap_or("Unknown".to_string());
+            let kind = track.get("kind")
+                .as_string()
+                .unwrap_or_default();
+            let default = track.get("default").as_bool();
+            if kind.contains("captions") {
+                subtitles.push(
+                    PlaylistEpisodeServerSubtitle { 
+                        url: file, 
+                        name: label, 
+                        format: mochi_structs::video::PlaylistEpisodeServerSubtitleFormat::VTT,
+                        default: default.unwrap_or(false),
+                        autoselect: default.unwrap_or(false),
                     }
-                }
-            }    
+                )
+            }
         }
 
-        // TODO: Add timestamps
+        let mut skip_times: Vec<PlaylistEpisodeServerSkipTime> = vec![];
+        if let Ok(intro) = json.get("intro").as_object() {
+            if let (Ok(start), Ok(stop)) = (intro.get("start").as_float(), intro.get("end").as_float()) {
+                if stop > 0.0 {
+                    skip_times.push(
+                        PlaylistEpisodeServerSkipTime { 
+                            start_time: start as f32, 
+                            end_time: stop as f32, 
+                            skip_type: mochi_structs::video::PlaylistEpisodeServerSkipType::OPENING 
+                        }
+                    )    
+                }
+            }
+        }
+
+        if let Ok(outro) = json.get("outro").as_object() {
+            if let (Ok(start), Ok(stop)) = (outro.get("start").as_float(), outro.get("end").as_float()) {
+                if stop > 0.0 {
+                    skip_times.push(
+                        PlaylistEpisodeServerSkipTime { 
+                            start_time: start as f32, 
+                            end_time: stop as f32, 
+                            skip_type: mochi_structs::video::PlaylistEpisodeServerSkipType::ENDING 
+                        }
+                    )    
+                }
+            }
+        }
 
         Ok(
             PlaylistEpisodeServerResponse { 
                 links, 
-                subtitles
+                subtitles,
+                skip_times,
+                headers: vec![],
             }
         )
-        // Err(MochiError::Unknown)
     }
 }

@@ -123,7 +123,9 @@ impl GogoCDN {
         Ok(
             PlaylistEpisodeServerResponse { 
                 links, 
-                subtitles: vec![]
+                subtitles: vec![],
+                skip_times: vec![],
+                headers: vec![],
             }
         )
     }

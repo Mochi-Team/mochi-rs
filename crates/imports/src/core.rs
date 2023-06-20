@@ -143,7 +143,7 @@ impl PtrRef {
     pub fn as_array(self) -> Result<ArrayRef> {
         match self.kind() {
             Kind::Array => {
-                Ok(ArrayRef(self, 0, 0))
+                Ok(ArrayRef::from(self))
             },
             Kind::Null => {
                 Err(MochiError::from(PtrCastError::NullPointer))
@@ -326,6 +326,11 @@ impl ObjectRef {
         let rid = unsafe { obj_values(self.0 .0) };
         ArrayRef::from(PtrRef::new(rid))
     }
+
+    #[inline]
+    pub fn ptr(&self) -> i32 {
+        self.0.pointer()
+    } 
 }
 
 impl Clone for ObjectRef {
@@ -355,7 +360,7 @@ impl ArrayRef {
 
     #[inline]
     pub fn len(&self) -> i32 {
-        unsafe { array_len(self.0 .0) }
+        unsafe { array_len(self.0.0) }
     }
 
     #[inline]
@@ -364,24 +369,24 @@ impl ArrayRef {
     }
 
     pub fn get(&self, index: i32) -> PtrRef {
-        let rid = unsafe { array_get(self.0 .0, index) };
+        let rid = unsafe { array_get(self.0.0, index) };
         PtrRef::new(rid)
     }
 
     #[inline]
     pub fn set(&mut self, index: i32, object: PtrRef) {
-        unsafe { array_set(self.0 .0, index, object.0) };
+        unsafe { array_set(self.0.0, index, object.0) };
     }
 
     #[inline]
     pub fn insert(&mut self, value: PtrRef) {
-        unsafe { array_append(self.0 .0, value.0) };
+        unsafe { array_append(self.0.0, value.0) };
         self.2 += 1;
     }
 
     #[inline]
     pub fn remove(&mut self, index: i32) {
-        unsafe { array_remove(self.0 .0, index) };
+        unsafe { array_remove(self.0.0, index) };
         self.2 -= 1;
     }
 
@@ -426,9 +431,9 @@ impl FromIterator<PtrRef> for ArrayRef {
 }
 
 impl From<PtrRef> for ArrayRef {
-    fn from(ptrref: PtrRef) -> Self {
-        let length = unsafe { array_len(ptrref.0) };
-        Self(ptrref, 0, length.wrapping_sub(1))
+    fn from(ptr: PtrRef) -> Self {
+        let length = unsafe { array_len(ptr.0) };
+        Self(ptr, 0, length.wrapping_sub(1))
     }
 }
 
