@@ -2,6 +2,7 @@ use super::core::PtrRef;
 use super::error::{Result, MochiError};
 
 #[link(wasm_import_module = "json")]
+// #[link(name = "swift-bindings", kind = "static")]
 extern "C" {
     fn json_parse(bytes: i32, size: i32) -> i32;
 }

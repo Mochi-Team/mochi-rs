@@ -6,8 +6,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 use mochi_imports::crypto::Crypto;
 use mochi_imports::error::Result;
-use mochi_imports::http::HTTPMethod;
-use mochi_imports::http::HTTPRequest;
+use mochi_imports::http::RequestMethod;
+use mochi_imports::http::Request;
 use mochi_structs::video::PlaylistEpisodeServerLink;
 use mochi_structs::video::PlaylistEpisodeServerResponse;
 use mochi_structs::video::PlaylistEpisodeServerSkipTime;
@@ -29,9 +29,9 @@ impl RapidCloud {
 
         let url = format!("{}/ajax/embed-6/getSources?id={}", HOST, id);
 
-        let json = HTTPRequest::new(
+        let json = Request::new(
             &url, 
-            HTTPMethod::Get
+            RequestMethod::Get
         )
         .header("X-Requested-With", "XMLHttpRequest")
         .json()?
@@ -47,10 +47,10 @@ impl RapidCloud {
         let mut links: Vec<PlaylistEpisodeServerLink> = vec![];
 
         if encrypted {
-            let encrypted_key = HTTPRequest::new(
+            let encrypted_key = Request::new(
                 // TODO: Add param at the end so we don't cache request
                 "https://raw.githubusercontent.com/enimax-anime/key/e6/key.txt", 
-                HTTPMethod::Get
+                RequestMethod::Get
             )
             .string()
             .unwrap_or(FALLBACK_KEY.to_string())

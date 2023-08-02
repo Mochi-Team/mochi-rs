@@ -1,9 +1,9 @@
 #![no_std]
 
-mod gogocdn;
 mod vidstreaming;
 mod rapidcloud;
+mod vidcloud;
 
-pub use gogocdn::GogoCDN;
 pub use vidstreaming::VidStreaming;
 pub use rapidcloud::RapidCloud;
+pub use vidcloud::VidCloud;

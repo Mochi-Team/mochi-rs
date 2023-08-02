@@ -3,6 +3,7 @@ use alloc::{string::String, vec::Vec};
 use crate::core::PtrRef;
 
 #[link(wasm_import_module = "crypto")]
+// #[link(name = "swift-bindings", kind = "static")]
 extern "C" {
     fn crypto_get_data_len(host_ptr: i32) -> i32;
     fn crypto_get_data(host_ptr: i32, buf_ptr: i32, buf_len: i32);

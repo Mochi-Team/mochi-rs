@@ -8,9 +8,10 @@ use crate::json::{parse, JsonValue};
 type ReqRef = i32;
 
 #[link(wasm_import_module = "http")]
+// #[link(name = "swift-bindings", kind = "static")]
 extern "C" {
     #[link_name = "create"]
-    fn request_create(method: HTTPMethod) -> ReqRef;
+    fn request_create(method: RequestMethod) -> ReqRef;
     #[link_name = "send"]
     fn request_send(ptr: ReqRef);
     #[link_name = "close"]
@@ -23,10 +24,10 @@ extern "C" {
     #[link_name = "set_body"]
     fn request_set_body(ptr: ReqRef, data_ptr: i32, data_len: i32);
     #[link_name = "set_method"]
-    fn request_set_method(ptr: ReqRef, method: HTTPMethod);
+    fn request_set_method(ptr: ReqRef, method: RequestMethod);
 
     #[link_name = "get_method"]
-    fn request_get_method(ptr: ReqRef) -> HTTPMethod;
+    fn request_get_method(ptr: ReqRef) -> RequestMethod;
     #[link_name = "get_url"]
     fn request_get_url(ptr: ReqRef) -> i32;
     #[link_name = "get_header"]
@@ -41,7 +42,7 @@ extern "C" {
 
 #[repr(C)]
 #[derive(Debug)]
-pub enum HTTPMethod {
+pub enum RequestMethod {
     Get,
     Post,
     Put,
@@ -50,13 +51,13 @@ pub enum HTTPMethod {
 }
 
 #[derive(Debug)]
-pub struct HTTPRequest {
+pub struct Request {
     ptr: i32,
 }
 
 // By default, the method it uses is `GET`
-impl HTTPRequest {
-    pub fn new(url: &str, method: HTTPMethod) -> Self {
+impl Request {
+    pub fn new(url: &str, method: RequestMethod) -> Self {
         unsafe {
             let ptr: i32 = request_create(method);
             request_set_url(
@@ -117,7 +118,7 @@ impl HTTPRequest {
         self
     }
 
-    pub fn set_method(self, method: HTTPMethod) -> Self {
+    pub fn set_method(self, method: RequestMethod) -> Self {
         unsafe {
             request_set_method(self.ptr, method)
         }
@@ -131,7 +132,7 @@ impl HTTPRequest {
         }        
     }
 
-    pub fn get_method(&self) -> HTTPMethod {
+    pub fn get_method(&self) -> RequestMethod {
         unsafe {
             request_get_method(self.ptr)
         }
@@ -191,7 +192,7 @@ impl HTTPRequest {
     }
 }
 
-impl Drop for HTTPRequest {
+impl Drop for Request {
     fn drop(&mut self) {
         self.close();
     }

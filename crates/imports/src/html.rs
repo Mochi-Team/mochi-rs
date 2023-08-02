@@ -11,6 +11,7 @@ use super::error::{Result, MochiError, NodeError};
 use super::core::{HostPtr, copy, destroy};
 
 #[link(wasm_import_module = "html")]
+// #[link(name = "swift-bindings", kind = "static")]
 extern "C" {
     #[link_name = "parse"]
     fn scraper_parse(string: *const u8, len: usize) -> HostPtr;

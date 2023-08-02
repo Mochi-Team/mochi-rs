@@ -1,4 +1,5 @@
 use alloc::string::String;
+use alloc::vec::Vec;
 
 use super::html::Node;
 
@@ -9,6 +10,7 @@ type RawBufPtr = *const u8;
 pub(crate) type HostPtr = i32;
 
 #[link(wasm_import_module = "core")]
+// #[link(name = "swift-bindings", kind = "static")]
 extern "C" {
     pub(crate) fn copy(ptr: HostPtr) -> HostPtr;
     pub(crate) fn destroy(ptr: HostPtr);
@@ -434,6 +436,16 @@ impl From<PtrRef> for ArrayRef {
     fn from(ptr: PtrRef) -> Self {
         let length = unsafe { array_len(ptr.0) };
         Self(ptr, 0, length.wrapping_sub(1))
+    }
+}
+
+impl<T: Into<PtrRef>> From<Vec<T>> for ArrayRef {
+    fn from(value: Vec<T>) -> Self {
+        let mut array = ArrayRef::new();
+        for item in value {
+            array.insert(item.into())
+        }
+        array
     }
 }
 

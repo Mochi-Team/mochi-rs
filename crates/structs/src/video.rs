@@ -78,6 +78,17 @@ pub struct PlaylistEpisodeSource {
     pub servers: Vec<PlaylistEpisodeServer>
 }
 
+impl Default for PlaylistEpisodeSource {
+    fn default() -> Self {
+        Self { 
+            id: "default".to_string(), 
+            display_name: "Default".to_string(), 
+            description: None, 
+            servers: vec![] 
+        }
+    }
+}
+
 pub struct PlaylistEpisodeServer {
     pub id: String,
     pub display_name: String,
@@ -222,10 +233,7 @@ impl Into<PlaylistEpisodeServerRequest> for PtrRef {
 
 impl From<PlaylistEpisodeSources> for PtrRef {
     fn from(value: PlaylistEpisodeSources) -> Self {
-        let mut sources = ArrayRef::new();
-        for source in value.0 {
-            sources.insert(source.into())
-        }
+        let sources = ArrayRef::from(value.0);
         let sources_id = sources.ptr();
         core::mem::forget(sources);
         PtrRef::new(sources_id)
@@ -236,10 +244,7 @@ impl From<PlaylistEpisodeSource> for PtrRef {
     fn from(value: PlaylistEpisodeSource) -> Self {
         let description = optional_str_ptr(value.description);
 
-        let mut servers = ArrayRef::new();
-        for server in value.servers {
-            servers.insert(server.into())
-        }
+        let servers = ArrayRef::from(value.servers);
         let servers_ptr = servers.ptr();
         core::mem::forget(servers);
 
@@ -291,24 +296,15 @@ impl From<PlaylistEpisodeServerSkipTime> for PtrRef {
 
 impl From<PlaylistEpisodeServerResponse> for PtrRef {
     fn from(value: PlaylistEpisodeServerResponse) -> Self {
-        let mut links = ArrayRef::new();
-        for link in value.links {
-            links.insert(link.into());
-        }
+        let links = ArrayRef::from(value.links);
         let links_ptr = links.ptr();
         core::mem::forget(links);
 
-        let mut subtitles = ArrayRef::new();
-        for subtitle in value.subtitles {
-            subtitles.insert(subtitle.into());
-        }
+        let subtitles = ArrayRef::from(value.subtitles);
         let subtitles_ptr = subtitles.ptr();
         core::mem::forget(subtitles);
 
-        let mut skip_times = ArrayRef::new();
-        for skip_time in value.skip_times {
-            skip_times.insert(skip_time.into());
-        }
+        let skip_times = ArrayRef::from(value.skip_times);
         let skip_times_ptr = skip_times.ptr();
         core::mem::forget(skip_times);
 
