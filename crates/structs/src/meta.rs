@@ -599,7 +599,7 @@ impl From<PlaylistItemsResponse> for PtrRef {
     fn from(value: PlaylistItemsResponse) -> Self {
         let contents = ArrayRef::from(value.contents);
         let contents_ptr = contents.ptr();
-        core::mem::forget(contents_ptr);
+        core::mem::forget(contents);
 
         let all_groups = ArrayRef::from(value.all_groups);
         let all_groups_ptr = all_groups.ptr();
