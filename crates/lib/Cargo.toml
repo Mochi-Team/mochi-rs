@@ -7,11 +7,11 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-mochi-macros = { version = "0.0.1", path = "../macros" }
-mochi-imports = { version = "0.0.1", path = "../imports" }
-mochi-extractors = { version = "0.0.1", path = "../extractors" }
-mochi-structs = { version = "0.0.1", path = "../structs" }
-mochi-proc-macros = { version = "0.0.1", path = "../proc_macros" }
+mochi-macros = { path = "../macros" }
+mochi-imports = { path = "../imports" }
+mochi-extractors = { path = "../extractors" }
+mochi-structs = { path = "../structs" }
+mochi-proc-macros = { path = "../proc_macros" }
 
 [features]
 extractors = []
