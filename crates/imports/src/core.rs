@@ -10,7 +10,6 @@ type RawBufPtr = *const u8;
 pub(crate) type HostPtr = i32;
 
 #[link(wasm_import_module = "core")]
-// #[link(name = "swift-bindings", kind = "static")]
 extern "C" {
     pub(crate) fn copy(ptr: HostPtr) -> HostPtr;
     pub(crate) fn destroy(ptr: HostPtr);
