@@ -1,14 +1,17 @@
 [package]
 name = "mochi"
+description = "This library allows creating mochi sources into wasm."
+repository = "https://github.com/Mochi-Team/mochi-rs"
+license = "MIT"
 version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-mochi-macros = { path = "../macros" }
-mochi-imports = { path = "../imports" }
-mochi-extractors = { path = "../extractors" }
-mochi-structs = { path = "../structs" }
-mochi-proc-macros = { path = "../proc_macros" }
+mochi-macros = { version = "0.0.1", path = "../macros" }
+mochi-imports = { version = "0.0.1", path = "../imports" }
+mochi-extractors = { version = "0.0.1", path = "../extractors" }
+mochi-structs = { version = "0.0.1", path = "../structs" }
+mochi-proc-macros = { version = "0.0.1", path = "../proc_macros" }
 
 [features]
 extractors = []
