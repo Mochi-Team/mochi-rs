@@ -3,7 +3,7 @@ name = "mochi-rs"
 description = "This library allows creating mochi sources into wasm."
 repository = "https://github.com/Mochi-Team/mochi-rs"
 license = "MIT"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 publish = true
 
