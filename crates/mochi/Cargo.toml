@@ -1,5 +1,5 @@
 [package]
-name = "mochi"
+name = "mochi-rs"
 description = "This library allows creating mochi sources into wasm."
 repository = "https://github.com/Mochi-Team/mochi-rs"
 license = "MIT"
