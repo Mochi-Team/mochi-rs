@@ -1,0 +1,21 @@
+[package]
+name = "mochi"
+description = "This library allows creating mochi sources into wasm."
+repository = "https://github.com/Mochi-Team/mochi-rs"
+license = "MIT"
+version = "0.0.1"
+edition = "2021"
+publish = true
+
+[dependencies]
+dlmalloc = { version = "0.2.4", optional = true, features = ["global"] }
+mochi-bind = { path = "../mochi-bind", version = "0.0.1" }
+
+[features]
+default = ["dlmalloc"]
+extractors = []
+
+[profile.release]
+opt-level = "s"
+# strip = true # this seems to crash proc-macro2
+lto = true
