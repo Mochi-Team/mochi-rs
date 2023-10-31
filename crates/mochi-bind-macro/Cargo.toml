@@ -1,0 +1,15 @@
+[package]
+name = "mochi-bind"
+description = "This proc macro generates the necessary code for WASM to use in Mochi."
+repository = "https://github.com/Mochi-Team/mochi-rs"
+license = "MIT"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+proc-macro2 = "1.0.69"
+quote = "1.0.33"
+syn = { version = "2.0.11", features = ["full"] }
+
+[lib]
+proc-macro = true

@@ -1,0 +1,13 @@
+[package]
+name = "mochi-test"
+description = "Internal testing crate for mochi-rs."
+repository = "https://github.com/Mochi-Team/mochi-rs"
+license = "MIT"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+mochi-test-macro = { path = '../mochi-test-macro', version = '=0.0.1' }
+
+[lib]
+test = false

@@ -1,6 +1,6 @@
 [package]
-name = "mochi-bind"
-description = "This proc macro generates the necessary code for WAM WASM to use in Mochi."
+name = "mochi-test-macro"
+description = "This proc macro generates the necessary code for testing Mochi modules."
 repository = "https://github.com/Mochi-Team/mochi-rs"
 license = "MIT"
 version = "0.0.1"

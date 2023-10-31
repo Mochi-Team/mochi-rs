@@ -9,7 +9,8 @@ publish = true
 
 [dependencies]
 dlmalloc = { version = "0.2.4", optional = true, features = ["global"] }
-mochi-bind = { path = "../mochi-bind", version = "0.0.1" }
+mochi-bind = { path = "../mochi-bind-macro", version = "0.0.1" }
+# mochi-test = { path = "../mochi-test", version = "0.0.1"}
 
 [features]
 default = ["dlmalloc"]
